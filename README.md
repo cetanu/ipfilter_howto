@@ -1,7 +1,7 @@
-**IP Filter Based Firewalls HOWTO**
-Brendan Conoboy <synk@swcp.com>
-Erik Fichtner <emf@obfuscation.org>
-Tue Aug 15 22:42:38 EDT 2000
+**IP Filter Based Firewalls HOWTO**  
+Brendan Conoboy <synk@swcp.com>  
+Erik Fichtner <emf@obfuscation.org>  
+Tue Aug 15 22:42:38 EDT 2000  
 
 **Abstract:** This document is intended to introduce a new user to the IP Filter firewalling package and, at the same time, teach the user some basic fundamentals of good firewall design.
 
