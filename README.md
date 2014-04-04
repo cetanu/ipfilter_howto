@@ -516,35 +516,37 @@ We might now do:
     block in log quick on tun0
     pass in all
 
-We need two block statements since return-rst only works with TCP, and we still want to block protocols such as UDP, ICMP, and others. Now that this is done, the remote side will get "connection refused" instead of "connection timed out".
+We need two block statements since `return-rst` only works with TCP, and we still want to block protocols such as UDP, ICMP, and others. Now that this is done, the remote side will get "connection refused" instead of "connection timed out".
 It's also possible to send an error message when somebody sends a packet to a UDP port on your system. Whereas once you might have used:
 
     block in log quick on tun0 proto udp from any to 20.20.20.0/24 port = 111
 
-You could instead use the return-icmp keyword to send a reply:
+You could instead use the `return-icmp` keyword to send a reply:
 
     block return-icmp(port-unr) in log quick on tun0 proto udp from any to 20.20.20.0/24 port = 111
     
-According to TCP/IP Illustrated, port-unreachable is the correct ICMP type to return when no service is listening on the port in question. You can use any ICMP type you like, but port-unreachable is probably your best bet. It's also the default ICMP type for return-icmp.
-However, when using return-icmp, you'll notice that it's not very stealthy, and it returns the ICMP packet with the IP address of the firewall, not the original destination of the packet. This was fixed in ipfilter 3.3, and a new keyword; return-icmp-as-dest, has been added. The new format is:
+According to TCP/IP Illustrated, port-unreachable is the correct ICMP type to return when no service is listening on the port in question. You can use any ICMP type you like, but port-unreachable is probably your best bet. It's also the default ICMP type for `return-icmp`.
+However, when using `return-icmp`, you'll notice that it's not very stealthy, and it returns the ICMP packet with the IP address of the firewall, not the original destination of the packet. This was fixed in ipfilter 3.3, and a new keyword; `return-icmp-as-dest`, has been added. The new format is:
 
     block return-icmp-as-dest(port-unr) in log on tun0 proto udp from any to 20.20.20.0/24 port = 111
 
 
 # Fancy Logging Techniques
 
-It is important to note that the presence of the log keyword only ensures that the packet will be available to the ipfilter logging device; /dev/ipl. In order to actually see this log information, one must be running the ipmon utility (or some other utility that reads from /dev/ipl). The typical usage of log is coupled with ipmon -s to log the information to syslog. As of ipfilter 3.3, one can now even control the logging behavior of syslog by using log level keywords, as in rules such as this:
+It is important to note that the presence of the log keyword only ensures that the packet will be available to the ipfilter logging device; `/dev/ipl`. In order to actually see this log information, one must be running the `ipmon` utility (or some other utility that reads from `/dev/ipl`). The typical usage of `log` is coupled with `ipmon -s` to log the information to syslog. As of ipfilter 3.3, one can now even control the logging behavior of syslog by using log level keywords, as in rules such as this:
 
     block in log level auth.info quick on tun0 from 20.20.20.0/24 to any
     block in log level auth.alert quick on tun0 proto tcp from any to 20.20.20.0/24 port = 21
 
-In addition to this, you can tailor what information is being logged. For example, you may not be interested that someone attempted to probe your telnet port 500 times, but you are interested that they probed you once. You can use the log first keyword to only log the first example of a packet. Of course, the notion of "first-ness" only applies to packets in a specific session, and for the typical blocked packet, you will be hard pressed to encounter situations where this does what you expect. However, if used in conjunction with pass and keep state, this can be a valuable keyword for keeping tabs on traffic.
-Another useful thing you can do with the logs is to keep track of interesting pieces of the packet in addition to the header information normally being logged. Ipfilter will give you the first 128 bytes of the packet if you use the log body keyword. You should limit the use of body logging, as it makes your logs very verbose, but for certain applications, it is often handy to be able to go back and take a look at the packet, or to send this data to another application that can examine it further.
+In addition to this, you can tailor what information is being logged. For example, you may not be interested that someone attempted to probe your telnet port 500 times, but you are interested that they probed you once. You can use the `log first` keyword to only log the first example of a packet. Of course, the notion of "first-ness" only applies to packets in a specific session, and for the typical blocked packet, you will be hard pressed to encounter situations where this does what you expect. However, if used in conjunction with `pass` and `keep state`, this can be a valuable keyword for keeping tabs on traffic.  
+Another useful thing you can do with the logs is to keep track of interesting pieces of the packet in addition to the header information normally being logged. Ipfilter will give you the first 128 bytes of the packet if you use the log body keyword.  
+You should limit the use of body logging, as it makes your logs very verbose, but for certain applications, it is often handy to be able to go back and take a look at the packet, or to send this data to another application that can examine it further.
 
 
 # Putting It All Together
 
-So now we have a pretty tight firewall, but it can still be tighter. Some of the original ruleset we wiped clean is actually very useful. I'd suggest bringing back all the anti-spoofing stuff. This leaves us with:
+So now we have a pretty tight firewall, but it can still be tighter. Some of the original ruleset we wiped clean is actually very useful.  
+I'd suggest bringing back all the anti-spoofing stuff. This leaves us with:
 
     block in on tun0
     block in quick on tun0 from 192.168.0.0/16 to any
@@ -561,7 +563,8 @@ So now we have a pretty tight firewall, but it can still be tighter. Some of the
 
 # Improving Performance With Rule Groups
 
-Let's extend our use of our firewall by creating a much more complicated, and we hope more applicable to the real world, example configuration For this example, we're going to change the interface names, and network numbers. Let's assume that we have three interfaces in our firewall with interfaces xl0, xl1, and xl2.
+Let's extend our use of our firewall by creating a much more complicated, and we hope more applicable to the real world, example configuration For this example, we're going to change the interface names, and network numbers.   
+Let's assume that we have three interfaces in our firewall with interfaces `xl0`, `xl1`, and `xl2`.
 
 - xl0 is connected to our external network 20.20.20.0/26
 - xl1 is connected to our "DMZ" network 20.20.20.64/26
@@ -593,14 +596,16 @@ We'll define the entire ruleset in one swoop, since we figure that you can read 
     block out on xl2 all
     pass in quick on xl2 proto tcp/udp from 20.20.20.128/25 to any keep state
 
-From this arbitarary example, we can already see that our ruleset is becoming unwieldy. To make matters worse, as we add more specific rules to our DMZ network, we add additional tests that must be parsed for every packet, which affects the performance of the xl0 <-> xl2 connections. If you set up a firewall with a ruleset like this, and you have lots of bandwidth and a moderate amount of cpu, everyone that has a workstation on the xl2 network is going to come looking for your head to place on a platter. So, to keep your head <-> torso network intact, you can speed things along by creating rule groups. Rule groups allow you to write your ruleset in a tree fashion, instead of as a linear list, so that if your packet has nothing to do with the set of tests (say, all those xl1 rules) those rules will never be consulted. It's somewhat like having multiple firewalls all on the same machine.
+From this arbitrary example, we can already see that our ruleset is becoming unwieldy. To make matters worse, as we add more specific rules to our DMZ network, we add additional tests that must be parsed for every packet, which affects the performance of the `xl0 <-> xl2` connections.  
+If you set up a firewall with a ruleset like this, and you have lots of bandwidth and a moderate amount of cpu, everyone that has a workstation on the `xl2` network is going to come looking for your head to place on a platter. So, to keep your `head <-> torso` network intact, you can speed things along by creating rule groups. Rule groups allow you to write your ruleset in a tree fashion, instead of as a linear list, so that if your packet has nothing to do with the set of tests (say, all those `xl1` rules) those rules will never be consulted. It's somewhat like having multiple firewalls all on the same machine.  
 Here's a simple example to get us started:
 
     block out quick on xl1 all head 10
     pass out quick proto tcp from any to 20.20.20.64/26 port = 80 flags S keep state group 10
     block out on xl2 all
 
-In this simplistic example, we can see a small hint of the power of the rule group. If the packet is not destined for xl1, the head of rule group 10 will not match, and we will go on with our tests. If the packet does match for xl1, the quick keyword will short-circuit all further processing at the root level (rule group 0), and focus the testing on rules which belong to group 10; namely, the SYN check for 80/tcp. In this way, we can re-write the above rules so that we can maximize performance of our firewall.
+In this simplistic example, we can see a small hint of the power of the rule group. If the packet is not destined for `xl1`, the head of rule group 10 will not match, and we will go on with our tests.  
+If the packet does match for `xl1`, the quick keyword will short-circuit all further processing at the root level (rule group 0), and focus the testing on rules which belong to group 10; namely, the SYN check for 80/tcp. In this way, we can re-write the above rules so that we can maximize performance of our firewall.
 
     block in quick on xl0 all head 1
     block in quick on xl0 from 192.168.0.0/16 to any group 1
@@ -628,7 +633,7 @@ In this simplistic example, we can see a small hint of the power of the rule gro
     block out on xl2 all
     pass in quick on xl2 proto tcp/udp from 20.20.20.128/25 to any keep state
 
-Now you can see the rule groups in action. For a host on the xl2 network, we can completely bypass all the checks in group 10 when we're not communicating with hosts on that network.
+Now you can see the rule groups in action. For a host on the `xl2` network, we can completely bypass all the checks in group 10 when we're not communicating with hosts on that network.
 Depending on your situation, it may be prudent to group your rules by protocol, or various machines, or netblocks, or whatever makes it flow smoothly.
 
 
@@ -638,14 +643,15 @@ Even though we're forwarding some packets, and blocking other packets, we're typ
 
     block in quick on xl0 fastroute proto udp from any to any port 33434 >< 33465
 
-The presence of the fastroute keyword will signal ipfilter to not pass the packet into the Unix IP stack for routing which results in a TTL decrement. The packet will be placed gently on the output interface by ipfilter itself and no such decrement will happen. Ipfilter will of course use the system's routing table to figure out what the appropriate output interface really is, but it will take care of the actual task of routing itself.
-There's a reason we used block quick in our example, too. If we had used pass, and if we had IP Forwarding enabled in our kernel, we would end up having two paths for a packet to come out of, and we would probably panic our kernel.
+The presence of the `fastroute` keyword will signal ipfilter to not pass the packet into the Unix IP stack for routing which results in a TTL decrement. The packet will be placed gently on the output interface by ipfilter itself and no such decrement will happen. Ipfilter will of course use the system's routing table to figure out what the appropriate output interface really is, but it will take care of the actual task of routing itself.  
+There's a reason we used `block quick` in our example, too. If we had used `pass`, and if we had IP Forwarding enabled in our kernel, we would end up having two paths for a packet to come out of, and we would probably panic our kernel.
 It should be noted, however, that most Unix kernels (and certainly the ones underlying the systems that ipfilter usually runs on) have far more efficient routing code than what exists in ipfilter, and this keyword should not be thought of as a way to improve the operating speed of your firewall, and should only be used in places where stealth is an issue.
 
 
 # NAT and Proxies
 
-Outside of the corporate environment, one of the biggest enticements of firewall technology to the end user is the ability to connect several computers through a common external interface, often without the approval, knowledge, or even consent of their service provider. To those familiar with Linux, this concept is called IP Masquerading, but to the rest of the world it is known by the more obscure name of Network Address Translation, or NAT for short.[[dagger]] [[footnote: [[dagger]] To be pedantic, what IPFilter provides is really called NPAT, for Network and Port Address Translation, which means we can change any of the source and destination IP Addresses and their source and destination ports. True NAT only allows one to change the addresses. ]]
+Outside of the corporate environment, one of the biggest enticements of firewall technology to the end user is the ability to connect several computers through a common external interface, often without the approval, knowledge, or even consent of their service provider. To those familiar with Linux, this concept is called IP Masquerading, but to the rest of the world it is known by the more obscure name of **Network Address Translation**, or **NAT** for short.  
+<sub>To be pedantic, what IPFilter provides is really called **NPAT**, for Network and Port Address Translation, which means we can change any of the source and destination IP Addresses and their source and destination ports. True NAT only allows one to change the addresses.</sub>
 
 
 # Mapping Many Addresses Into One Address
@@ -654,13 +660,18 @@ The basic use of NAT accomplishes the same thing that Linux's IP Masquerading fu
 
     map tun0 192.168.1.0/24 -> 20.20.20.1/32
 
-Very simple. Whenever a packet goes out the tun0 interface with a source address matching the CIDR network mask of 192.168.1.0/24 [[dagger]][[dagger]] this packet will be rewritten within the IP stack such that its source address is 20.20.20.1, and it will be sent on to its original destination. The system also keeps a list of what translated connections are in progress so that it can perform the reverse and remap the response (which will be directed to 20.20.20.1) to the internal host that really generated the packet. [[footnote: [[dagger]][[dagger]] This is a typical internal address space, since it's non-routable on the Real Internet it is often used for internal networks. You should still block these packets coming in from the outside world as discussed earlier. ]]
-There is a drawback to the rule we have just written, though. In a large number of cases, we do not happen to know what the IP address of our outside link is (if we're using tun0 or ppp0 and a typical ISP) so it makes setting up our NAT tables a chore. Luckily, NAT is smart enough to accept an address of 0/32 as a signal that it needs to go look at what the address of that interface really is and we can rewrite our rule as follows:
+Very simple. Whenever a packet goes out the `tun0` interface with a source address matching the CIDR network mask of `192.168.1.0/24`  
+
+- <sub>This packet will be rewritten within the IP stack such that its source address is `20.20.20.1`, and it will be sent on to its original destination. The system also keeps a list of what translated connections are in progress so that it can perform the reverse and remap the response (which will be directed to `20.20.20.1`) to the internal host that really generated the packet.</sub>
+
+- <sub>This is a typical internal address space, since it's non-routable on the Real Internet it is often used for internal networks. You should still block these packets coming in from the outside world as discussed earlier.</sub>
+
+There is a drawback to the rule we have just written, though. In a large number of cases, we do not happen to know what the IP address of our outside link is (if we're using `tun0` or `ppp0` and a typical ISP) so it makes setting up our NAT tables a chore. Luckily, NAT is smart enough to accept an address of 0/32 as a signal that it needs to go look at what the address of that interface really is and we can rewrite our rule as follows:
 
     map tun0 192.168.1.0/24 -> 0/32
 
-Now we can load our ipnat rules with impunity and connect to the outside world without having to edit anything. You do have to run ipf -y to refresh the address if you get disconnected and redial or if your DHCP lease changes, though.
-Some of you may be wondering what happens to the source port when the mapping happens. With our current rule, the packet's source port is changed to the first available port on the NAT host. There can be instances where we do not desire this behavior; maybe we have another firewall further upstream we have to pass through, or perhaps we use the NAT host for other things and we wish to limit the amount of ports that the NAT system can consume. ipnat helps us here too with the portmap keyword:
+Now we can load our ipnat rules with impunity and connect to the outside world without having to edit anything. You do have to run `ipf -y` to refresh the address if you get disconnected and redial or if your DHCP lease changes, though.  
+Some of you may be wondering what happens to the source port when the mapping happens. With our current rule, the packet's source port is changed to the first available port on the NAT host. There can be instances where we do not desire this behavior; maybe we have another firewall further upstream we have to pass through, or perhaps we use the NAT host for other things and we wish to limit the amount of ports that the NAT system can consume. ipnat helps us here too with the `portmap` keyword:
 
     map tun0 192.168.1.0/24 -> 0/32 portmap tcp/udp 20000:30000
 
@@ -669,18 +680,18 @@ Our rule now shoehorns all the translated connections (which can be tcp, udp, or
 
 # Mapping Many Addresses Into a Pool of Addresses
 
-Another use common use of NAT is to take a small statically allocated block of addresses and map many computers into this smaller address space. This is easy to accomplish using what you already know about the map and portmap keywords by writing a rule like so:
+Another use common use of NAT is to take a small statically allocated block of addresses and map many computers into this smaller address space. This is easy to accomplish using what you already know about the map and `portmap` keywords by writing a rule like so:
 
     map tun0 192.168.0.0/16 -> 20.20.20.0/24 portmap tcp/udp 20000:60000
 
-Also, there may be instances where a remote application requires that multiple connections all come from the same IP address. We can help with these situations by telling NAT to statically map sessions from a host into the pool of addresses and work some magic to choose a port. This uses a the keyword map-block as follows:
+Also, there may be instances where a remote application requires that multiple connections all come from the same IP address. We can help with these situations by telling NAT to statically map sessions from a host into the pool of addresses and work some magic to choose a port. This uses a the keyword `map-block` as follows:
 
     map-block tun0 192.168.1.0/24 -> 20.20.20.0/24
 
 
 # One to One Mappings
 
-Occasionally it is desirable to have a system with one IP address behind the firewall to appear to have a completely different IP address. One example of how this would work would be a lab of computers which are then attached to various networks that are to be put under some kind of test. In this example, you would not want to have to reconfigure the entire lab when you could place a NAT system in front and change the addresses in one simple place. We can do that with the bimap keyword, for bidirectional mapping. Bimap has some additional protections on it to ensure a known state for the connection, whereas the map keyword is designed to allocate an address and a source port and rewrite the packet and go on with life.
+Occasionally it is desirable to have a system with one IP address behind the firewall to appear to have a completely different IP address. One example of how this would work would be a lab of computers which are then attached to various networks that are to be put under some kind of test. In this example, you would not want to have to reconfigure the entire lab when you could place a NAT system in front and change the addresses in one simple place. We can do that with the `bimap` keyword, for bidirectional mapping. `Bimap` has some additional protections on it to ensure a known state for the connection, whereas the map keyword is designed to allocate an address and a source port and rewrite the packet and go on with life.
 
     bimap tun0 192.168.1.1/32 -> 20.20.20.1/32
 
@@ -689,7 +700,7 @@ will accomplish the mapping for one host.
 
 # Spoofing Services
 
-Spoofing services? What does that have to do with anything? Plenty. Lets pretend that we have a web server running on 20.20.20.5, and since we've gotten increasingly suspicious of our network security, we desire to not run this server on port 80 since that requires a brief lifespan as the root user. But how do we run it on a less privledged port of 8000 in this world of "anything dot com"? How will anyone find our server? We can use the redirection facilities of NAT to solve this problem by instructing it to remap any connections destined for 20.20.20.5:80 to really point to 20.20.20.5:8000. This uses the `rdr` keyword:
+Spoofing services? What does that have to do with anything? Plenty. Lets pretend that we have a web server running on `20.20.20.5`, and since we've gotten increasingly suspicious of our network security, we desire to not run this server on port 80 since that requires a brief lifespan as the root user. But how do we run it on a less privileged port of 8000 in this world of "anything dot com"? How will anyone find our server? We can use the redirection facilities of NAT to solve this problem by instructing it to remap any connections destined for `20.20.20.5:80` to really point to `20.20.20.5:8000`. This uses the `rdr` keyword:
 
     rdr tun0 20.20.20.5/32 port 80 -> 192.168.0.5 port 8000
 
@@ -697,16 +708,20 @@ We can also specify the protocol here, if we wanted to redirect a UDP service, i
 
     rdr tun0 20.20.20.0/24 port 31337 -> 127.0.0.1 port 31337 udp
 
-Another useful thing that rdr provides is the ability to selectively redirect connections from specific hosts. For example, if you had a trusted computer that you wanted to access one version of a service, while you wanted the rest of the world to access a different version, you could accomplish this with the following type of rdr ruleset:
+Another useful thing that `rdr` provides is the ability to selectively redirect connections from specific hosts. For example, if you had a trusted computer that you wanted to access one version of a service, while you wanted the rest of the world to access a different version, you could accomplish this with the following type of `rdr` ruleset:
 
     rdr tun0 from 1.2.3.4/32 20.20.20.5/32 port 80 -> 192.168.0.5 port 8001 tcp
     rdr tun0 20.20.20.5/32 port 80 -> 192.168.0.5 port 8000 tcp
 
-An extremely important point must be made about rdr: You cannot easily[[dagger]] use this feature as a "reflector". E.g:
+An **extremely important point** must be made about `rdr`: You cannot easily use this feature as a *"reflector"*. E.g:
 
     rdr tun0 20.20.20.5/32 port 80 -> 20.20.20.6 port 80 tcp
 
-will not work in the situation where .5 and .6 are on the same LAN segment. [[footnote: [[dagger]] Yes. There is a way to do this. It's so convoluted that I refuse to use it, though. Smart people who require this functionality will transparently redirect into something like TIS plug-gw on 127.0.0.1. Stupid people will set up a dummy loop interface pair and double rewrite. ]] The rdr function is applied to packets that enter the firewall on the specified interface. When a packet comes in that matches a rdr rule, its destination address is then rewritten, it is pushed into ipf for filtering, and should it successfully run the gauntlet of filter rules, it is then sent to the unix routing code. Since this packet is still inbound on the same interface that it will need to leave the system on to reach a host, the system gets confused. Reflectors don't work. Neither does specifying the address of the interface the packet just came in on. Always remember that rdr destinations must exit out of the firewall host on a different interface. [[dagger]][[dagger]] [[footnote: [[dagger]][[dagger]] This includes 127.0.0.1, by the way. That's on lo0. Neat, huh? ]]
+will not work in the situation where `.5` and `.6` are on the same LAN segment.  
+- <sub>Yes. There is a way to do this. It's so convoluted that I refuse to use it, though. Smart people who require this functionality will transparently redirect into something like `TIS plug-gw on 127.0.0.1`. Stupid people will set up a dummy loop interface pair and double rewrite.</sub>
+
+The `rdr` function is applied to packets that enter the firewall on the specified interface. When a packet comes in that matches a `rdr` rule, its destination address is then rewritten, it is pushed into ipf for filtering, and should it successfully run the gauntlet of filter rules, it is then sent to the unix routing code. Since this packet is still inbound on the same interface that it will need to leave the system on to reach a host, the system gets confused. Reflectors don't work. Neither does specifying the address of the interface the packet just came in on. Always remember that `rdr` destinations must exit out of the firewall host on a different interface.  
+<sub>This includes `127.0.0.1`, by the way. That's on `lo0`. Neat, huh?</sub>
 
 
 # Transparent Proxy Support; Redirection Made Useful
@@ -715,9 +730,9 @@ Since you're installing a firewall, you may have decided that it is prudent to u
 
     rdr xl0 0.0.0.0/0 port 21 -> 127.0.0.1 port 21
 
-This statement says that any packet coming in on the xl0 interface destined for any address (0.0.0.0/0) on the ftp port should be rewritten to connect it with a proxy that is running on the NAT system on port 21.
-This specific example of FTP proxying does lead to some complications when used with web browsers or other automatic-login type clients that are unaware of the requirements of communicating with the proxy. There are patches for TIS Firewall Toolkit'sftp-gw to mate it with the nat process so that it can determine where you were trying to go and automatically send you there. Many proxy packages now work in a transparent proxy environment (Squid for example, located at http://squid.nlanr.net, works fine.)
-This application of the rdr keyword is often more useful when you wish to force users to authenticate themselves with the proxy. (For example, you desire your engineers to be able to surf the web, but you would rather not have your call-center staff doing so.)
+This statement says that any packet coming in on the `xl0` interface destined for any address (`0.0.0.0/0`) on the ftp port should be rewritten to connect it with a proxy that is running on the NAT system on port 21.
+This specific example of FTP proxying does lead to some complications when used with web browsers or other automatic-login type clients that are unaware of the requirements of communicating with the proxy. There are patches for TIS Firewall Toolkit's ftp-gw to mate it with the nat process so that it can determine where you were trying to go and automatically send you there. Many proxy packages now work in a transparent proxy environment (Squid for example, located at <http://squid.nlanr.net>, works fine.)
+This application of the `rdr` keyword is often more useful when you wish to force users to authenticate themselves with the proxy. (For example, you desire your engineers to be able to surf the web, but you would rather not have your call-center staff doing so.)
 
 
 # Magic Hidden Within NAT; Application Proxies
@@ -1168,10 +1183,12 @@ But be warned that this method will alter the copied packet's destination addres
 This technique can be used quite effectively if you treat an IP Address on your drop-safe network in much the same way that you would treat a Multicast Group on the real internet. (e.g.: "192.168.254.2" could be the channel for your http traffic analysis system, "23.23.23.23" could be your channel for telnet sessions, and so on.) You don't even need to actually have this address set as an address or alias on any of your analysis systems. Normally, your ipfilter machine would need to ARP for the new destination address (using dup-to ed0:192.168.254.2 style, of course) but we can avoid that issue by creating a static arp entry for this "channel" on our ipfilter system.
 In general, though, dup-to ed0 is all that is required to get a new copy of the packet over to our drop-safe network for logging and examination.
 
-The to Method
 
+# The to Method
 
 The dup-to method does have an immediate drawback, though. Since it has to make a copy of the packet and optionally modify it for its new destination, it's going to take a while to complete all this work and be ready to deal with the next packet coming in to the ipfilter system.
 If we don't care about passing the packet to its normal destination and we were going to block it anyway, we can just use the to keyword to push this packet past the normal routing table and force it to go out a different interface than it would normally go out.
-block in quick on xl0 to ed0 proto tcp from any to any port < 1024
+
+    block in quick on xl0 to ed0 proto tcp from any to any port < 1024
+
 we use block quick for to interface routing, because like fastroute, the to interface code will generate two packet paths through ipfilter when used with pass, and likely cause your system to panic.
