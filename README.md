@@ -49,7 +49,7 @@ This section is designed to familiarize you with ipfilter's syntax, and firewall
 
 IPF (IP Filter) has a config file (as opposed to say, running some command again and again for each new rule).
 
-**The config file drips with Unix:** There's one rule per line, the "#" mark denotes a comment, and you can have a rule and a comment on the same line.
+The config file drips with Unix: There's one rule per line, the "#" mark denotes a comment, and you can have a rule and a comment on the same line.
 
 Extraneous whitespace is allowed, and is encouraged to keep the rules readable.
 
@@ -76,8 +76,7 @@ Should IPF deem it necessary to move on to the next rule, it would then apply th
 
     pass in all
 
-At this point, you might want to ask yourself "would IPF move on to the second rule?"  
-If you're familiar with ipfwadm or ipfw, you probably won't ask yourself this.  
+At this point, you might want to ask yourself "would IPF move on to the second rule?" If you're familiar with ipfwadm or ipfw, you probably won't ask yourself this.  
 Shortly after, you will become bewildered at the weird way packets are always getting denied or passed when they shouldn't.  
 Many packet filters stop comparing packets to rulesets the moment the first match is made; IPF is not one of them.
 
@@ -221,14 +220,14 @@ You can accomplish this particularly easily with what you already know of IPF. T
     pass in all
 
 
-# Bi-Directional Filtering; The "out" Keyword
+# Bi-Directional Filtering; The `out` Keyword
 
 Up until now, we've been passing or blocking inbound traffic. To clarify, inbound traffic is all traffic that enters the firewall on any interface. Conversely, outbound traffic is all traffic that leaves on any interface (whether locally generated or simply passing through). This means that all packets coming in are not only filtered as they enter the firewall, they're also filtered as they exit. Thusfar there's been an implied `pass out all` that may or may not be desirable.
 <sub>Just as you may pass and block incoming traffic, you may do the same with outgoing traffic.</sub>
 
 Now that we know there's a way to filter outbound packets just like inbound, it's up to us to find a concievable use for such a thing. One possible use of this idea is to keep spoofed packets from exiting your own network. Instead of passing any traffic out the router, you could instead limit permitted traffic to packets originating at `20.20.20.0/24`.
 
-You might do it like this:
+You might do it like this:  
 <sub>This can, of course, be changed by using `-DIPFILTER_DEFAULT_BLOCK` when compiling `ipfilter` on your system.</sub>
 
     pass out quick on tun0 from 20.20.20.0/24 to any
@@ -248,7 +247,7 @@ As another viewpoint, one might suppose that because nobody can send spoofed pac
 You'll likely find a number of uses for blocking outbound packets. One thing to always keep in mind is that in and out directions are in reference to your firewall, never any other machine.
 
 
-# Logging What Happens; The "log" Keyword
+# Logging What Happens; The `log` Keyword
 
 Up to this point, all blocked and passed packets have been silently blocked and silently passed. Usually you want to know if you're being attacked rather than wonder if that firewall is really buying you any added benefits.  
 While I wouldn't want to log every passed packet, and in some cases every blocked packet, I would want to know about the blocked packets from `20.20.20.0/24`. To do this, we add the log keyword:
@@ -312,7 +311,7 @@ Finally, there's the tun0 interface, which we've been half-filtering with up unt
 This is a pretty significant amount of filtering already, protecting `20.20.20.0/24` from being spoofed or being used for spoofing. Future examples will continue to show one-sideness, but keep in mind that it's for brevity's sake, and when setting up your own ruleset, adding rules for every direction and every interface is necessary.
 
 
-# Controlling Specific Protocols; The "proto" Keyword
+# Controlling Specific Protocols; The `proto` Keyword
 
 Denial of Service attacks are as rampant as buffer overflow exploits. Many denial of service attacks rely on glitches in the OS's TCP/IP stack. Frequently, this has come in the form of ICMP packets. Why not block them entirely?
 block in log quick on tun0 proto icmp from any to any
@@ -346,7 +345,8 @@ Adding these 3 rules to the anti-spoofing rules is a bit tricky. One error might
     block in log quick on tun0 from any to 20.20.20.255/32
     pass in all
     
-The problem with this is that an ICMP type 0 packet from 192.168.0.0/16 will get passed by the first rule, and never blocked by the fourth rule. Also, since we quickly pass an ICMP ECHO_REPLY (type 0) to 20.20.20.0/24, we've just opened ourselves back up to a nasty smurf attack and nullified those last two block rules. Oops. To avoid this, we place the ICMP rules after the anti-spoofing rules:
+The problem with this is that an ICMP type 0 packet from 192.168.0.0/16 will get passed by the first rule, and never blocked by the fourth rule. Also, since we quickly pass an ICMP ECHO_REPLY (type 0) to 20.20.20.0/24, we've just opened ourselves back up to a nasty smurf attack and nullified those last two block rules. Oops.  
+To avoid this, we place the ICMP rules after the anti-spoofing rules:
 
     block in quick on tun0 from 192.168.0.0/16 to any
     block in quick on tun0 from 172.16.0.0/12 to any
@@ -360,12 +360,16 @@ The problem with this is that an ICMP type 0 packet from 192.168.0.0/16 will get
     block in log quick on tun0 proto icmp from any to any
     pass in all
 
-Because we block spoofed traffic before the ICMP rules are processed, a spoofed packet never makes it to the ICMP ruleset. It's very important to keep such situations in mind when merging rules.
+Because we block spoofed traffic before the ICMP rules are processed, a spoofed packet never makes it to the ICMP ruleset.  
+It's very important to keep such situations in mind when merging rules.
 
 
 # TCP and UDP Ports; The "port" Keyword
 
-Now that we've started blocking packets based on protocol, we can start blocking packets based on specific aspects of each protocol. The most frequently used of these aspects is the port number. Services such as rsh, rlogin, and telnet are all very convenient to have, but also hideously insecure against network sniffing and spoofing. One great compromise is to only allow the services to run internally, then block them externally. This is easy to do because rlogin, rsh, and telnet use specific TCP ports (513, 514, and 23 respectively). As such, creating rules to block them is easy:
+Now that we've started blocking packets based on protocol, we can start blocking packets based on specific aspects of each protocol. The most frequently used of these aspects is the port number.  
+Services such as rsh, rlogin, and telnet are all very convenient to have, but also hideously insecure against network sniffing and spoofing.  
+One great compromise is to only allow the services to run internally, then block them externally.  
+This is easy to do because rlogin, rsh, and telnet use specific TCP ports (513, 514, and 23 respectively). As such, creating rules to block them is easy:
 
     block in log quick on tun0 proto tcp from any to 20.20.20.0/24 port = 513
     block in log quick on tun0 proto tcp from any to 20.20.20.0/24 port = 514
@@ -381,60 +385,103 @@ Make sure all 3 are before the pass in all and they'll be closed off from the ou
     block in log quick on tun0 proto tcp from any to 20.20.20.0/24 port = 23
     pass in all
 
-You might also want to block 514/udp (syslog), 111/tcp & 111/udp (portmap), 515/tcp (lpd), 2049/tcp and 2049/udp (NFS), 6000/tcp (X11) and so on and so forth. You can get a complete listing of the ports being listened to by using netstat -a (or lsof -i, if you have it installed).
-Blocking UDP instead of TCP only requires replacing proto tcp with proto udp. The rule for syslog would be:
+You might also want to block 514/udp (syslog), 111/tcp & 111/udp (portmap), 515/tcp (lpd), 2049/tcp and 2049/udp (NFS), 6000/tcp (X11) and so on and so forth.  
+You can get a complete listing of the ports being listened to by using `netstat -a` (or `lsof -i`, if you have it installed).  
+Blocking UDP instead of TCP only requires replacing `proto tcp` with `proto udp`.  
+The rule for syslog would be:
 
     block in log quick on tun0 proto udp from any to 20.20.20.0/24 port = 514
 
-IPF also has a shorthand way to write rules that apply to both proto tcp and proto udp at the same time, such as portmap or NFS. The rule for portmap would be:
+IPF also has a shorthand way to write rules that apply to both `proto tcp` and `proto udp` at the same time, such as portmap or NFS. The rule for portmap would be:
 
     block in log quick on tun0 proto tcp/udp from any to 20.20.20.0/24 port = 111
 
 
 # Advanced Firewalling Introduction
 
-This section is designed as an immediate followup to the basic section. Contained below are both concepts for advanced firewall design, and advanced features contained only within ipfilter. Once you are comfortable with this section, you should be able to build a very strong firewall.
+This section is designed as an immediate followup to the basic section. Contained below are both concepts for advanced firewall design, and advanced features contained only within ipfilter. 
+
+Once you are comfortable with this section, you should be able to build a very strong firewall.
 
 
-# Rampant Paranoia; or The Default-Deny Stance
+## Rampant Paranoia; or The Default-Deny Stance
 
-There's a big problem with blocking services by the port: sometimes they move. RPC based programs are terrible about this, lockd, statd, even nfsd listens places other than 2049. It's awfully hard to predict, and even worse to automate adjusting all the time. What if you miss a service? Instead of dealing with all that hassle, lets start over with a clean slate. The current ruleset looks like this:
+There's a big problem with blocking services by the port: sometimes they move. RPC based programs are terrible about this, lockd, statd, even nfsd listens places other than 2049.  
+It's awfully hard to predict, and even worse to automate adjusting all the time. 
+
+What if you miss a service? Instead of dealing with all that hassle, lets start over with a clean slate. The current ruleset looks like this:
+
 Yes, we really are starting over. The first rule we're going to use is this:
 
     block in all
 
-No network traffic gets through. None. Not a peep. You're rather secure with this setup. Not terribly useful, but quite secure. The great thing is that it doesn't take much more to make your box rather secure, yet useful too. Lets say the machine this is running on is a web server, nothing more, nothing less. It doesn't even do DNS lookups. It just wants to take connections on 80/tcp and that's it. We can do that. We can do that with a second rule, and you already know how:
+No network traffic gets through. None. Not a peep. You're rather secure with this setup. Not terribly useful, but quite secure.  
+The great thing is that it doesn't take much more to make your box rather secure, yet useful too.  
+Lets say the machine this is running on is a web server, nothing more, nothing less. It doesn't even do DNS lookups. It just wants to take connections on 80/tcp and that's it.  
+We can do that. We can do that with a second rule, and you already know how:
 
     block in on tun0 all
     pass in quick on tun0 proto tcp from any to 20.20.20.1/32 port = 80
 
-This machine will pass in port 80 traffic for 20.20.20.1, and deny everything else. For basic firewalling, this is all one needs.
+This machine will pass in port 80 traffic for 20.20.20.1, and deny everything else.  
+For basic firewalling, this is all one needs.
 
 
-# Implicit Allow; The "keep state" Rule
+# Implicit Allow; The `keep state` Rule
 
-The job of your firewall is to prevent unwanted traffic getting to point B from point A. We have general rules which say "as long as this packet is to port 23, it's okay." We have general rules which say "as long as this packet has its FIN flag set, it's okay." Our firewalls don't know the beginning, middle, or end of any TCP/UDP/ICMP session. They merely have vague rules that are applied to all packets. We're left to hope that the packet with its FIN flag set isn't really a FIN scan, mapping our services. We hope that the packet to port 23 isn't an attempted hijack of our telnet session. What if there was a way to identify and authorize individual TCP/UDP/ICMP sessions and distinguish them from port scanners and DoS attacks? There is a way, it's called keeping state.
-We want convenience and security in one. Lots of people do, that's why Ciscos have an "established" clause that lets established tcp sessions go through. Ipfw has established. Ipfwadm has setup/established. They all have this feature, but the name is very misleading. When we first saw it, we thought it meant our packet filter was keeping track of what was going on, that it knew if a connection was really established or not. The fact is, they're all taking the packet's word for it from a part of the packet anybody can lie about. They read the TCP packet's flags section and there's the reason UDP/ICMP don't work with it, they have no such thing. Anybody who can create a packet with bogus flags can get by a firewall with this setup.
-Where does IPF come in to play here, you ask? Well, unlike the other firewalls, IPF really can keep track of whether or not a connection is established. And it'll do it with TCP, UDP and ICMP, not just TCP. Ipf calls it keeping state. The keyword for the ruleset is keep state.
-Up until now, we've told you that packets come in, then the ruleset gets checked; packets go out, then the ruleset gets checked. Actually, what happens is packets come in, the state table gets checked, then *maybe* the inbound ruleset gets checked; packets go out, the state table gets checked, then *maybe* the outbound ruleset gets checked. The state table is a list of TCP/UDP/ICMP sessions that are unquestionadely passed through the firewall, circumventing the entire ruleset. Sound like a serious security hole? Hang on, it's the best thing that ever happened to your firewall.
-All TCP/IP sessions have a start, a middle, and an end (even though they're sometimes all in the same packet). You can't have an end without a middle and you can't have a middle without a start. This means that all you really need to filter on is the beginning of a TCP/UDP/ICMP session. If the beginning of the session is allowed by your firewall rules, you really want the middle and end to be allowed too (lest your IP stack should overflow and your machines become useless). Keeping state allows you to ignore the middle and end and simply focus on blocking/passing new sessions. If the new session is passed, all its subsequent packets will be allowed through. If it's blocked, none of its subsequent packets will be allowed through. Here's an example for running an ssh server (and nothing but an ssh server):
+The job of your firewall is to prevent unwanted traffic getting to point B from point A.
+We have general rules which say "as long as this packet is to port 23, it's okay."  
+We have general rules which say "as long as this packet has its FIN flag set, it's okay."  
+
+Our firewalls don't know the beginning, middle, or end of any TCP/UDP/ICMP session. They merely have vague rules that are applied to all packets. We're left to hope that the packet with its FIN flag set isn't really a FIN scan, mapping our services. We hope that the packet to port 23 isn't an attempted hijack of our telnet session.
+
+What if there was a way to identify and authorize individual TCP/UDP/ICMP sessions and distinguish them from port scanners and DoS attacks? There is a way, it's called keeping state.
+
+We want convenience and security in one. Lots of people do, that's why Ciscos have an "established" clause that lets established tcp sessions go through. Ipfw has established. Ipfwadm has setup/established.
+
+They all have this feature, but the name is very misleading. When we first saw it, we thought it meant our packet filter was keeping track of what was going on, that it knew if a connection was really established or not. The fact is, they're all taking the packet's word for it from a part of the packet anybody can lie about. 
+
+They read the TCP packet's flags section and there's the reason UDP/ICMP don't work with it, they have no such thing. Anybody who can create a packet with bogus flags can get by a firewall with this setup.
+
+Where does IPF come in to play here, you ask?  
+Well, unlike the other firewalls, IPF really can keep track of whether or not a connection is established. And it'll do it with TCP, UDP and ICMP, not just TCP. 
+
+Ipf calls it keeping state. The keyword for the ruleset is `keep state`.  
+Up until now, we've told you that packets come in, then the ruleset gets checked; packets go out, then the ruleset gets checked.   
+
+Actually, what happens is packets come in, the state table gets checked, then *maybe* the inbound ruleset gets checked; packets go out, the state table gets checked, then *maybe* the outbound ruleset gets checked. The state table is a list of TCP/UDP/ICMP sessions that are unquestionably passed through the firewall, circumventing the entire ruleset.
+
+Sound like a serious security hole?  
+Hang on, it's the best thing that ever happened to your firewall.
+
+All TCP/IP sessions have a start, a middle, and an end (even though they're sometimes all in the same packet). You can't have an end without a middle and you can't have a middle without a start.  
+This means that all you really need to filter on is the beginning of a TCP/UDP/ICMP session. If the beginning of the session is allowed by your firewall rules, you really want the middle and end to be allowed too (lest your IP stack should overflow and your machines become useless).
+
+Keeping state allows you to ignore the middle and end and simply focus on blocking/passing new sessions. If the new session is passed, all its subsequent packets will be allowed through. If it's blocked, none of its subsequent packets will be allowed through.  
+Here's an example for running an ssh server (and nothing but an ssh server):
 
     block out quick on tun0 all
     pass in quick on tun0 proto tcp from any to 20.20.20.1/32 port = 22 keep state
 
-The first thing you might notice is that there's no "pass out" provision. In fact, there's only an all-inclusive "block out" rule. Despite this, the ruleset is complete. This is because by keeping state, the entire ruleset is circumvented. Once the first SYN packet hits the ssh server, state is created and the remainder of the ssh session is allowed to take place without interference from the firewall. Here's another example:
+The first thing you might notice is that there's no `pass out` provision. In fact, there's only an all-inclusive `block out` rule. Despite this, the ruleset is complete.   
+This is because by keeping state, the entire ruleset is circumvented. Once the first SYN packet hits the ssh server, state is created and the remainder of the ssh session is allowed to take place without interference from the firewall.  
+Here's another example:
 
     block in quick on tun0 all
     pass out quick on tun0 proto tcp from 20.20.20.1/42 to any keep state
 
-In this case, the server is running no services. Infact, it's not a server, it's a client. And this client doesn't want unauthorized packets entering its IP stack at all. However, the client wants full access to the internet and the reply packets that such privledge entails. This simple ruleset creates state entries for every new outgoing TCP session. Again, since a state entry is created, these new TCP sessions are free to talk back and forth as they please without the hinderance or inspection of the firewall ruleset. We mentioned that this also works for UDP and ICMP:
+In this case, the server is running no services. Infact, it's not a server, it's a client. And this client doesn't want unauthorized packets entering its IP stack at all. However, the client wants full access to the internet and the reply packets that such privilege entails.  
+This simple ruleset creates state entries for every new outgoing TCP session.  
+Again, since a state entry is created, these new TCP sessions are free to talk back and forth as they please without the hindrance or inspection of the firewall ruleset.  
+We mentioned that this also works for UDP and ICMP:
 
     block in quick on tun0 all
     pass out quick on tun0 proto tcp from 20.20.20.1/42 to any keep state
     pass out quick on tun0 proto udp from 20.20.20.1/42 to any keep state
     pass out quick on tun0 proto icmp from 20.20.20.1/42 to any keep state
 
-Yes Virginia, we can ping. Now we're keeping state on TCP, UDP, ICMP. Now we can make outgoing connections as though there's no firewall at all, yet would-be attackers can't get back in. This is very handy because there's no need to track down what ports we're listening to, only the ports we want people to be able to get to.
+Yes Virginia, we can ping. Now we're keeping state on TCP, UDP, ICMP.  
+Now we can make outgoing connections as though there's no firewall at all, yet would-be attackers can't get back in. This is very handy because there's no need to track down what ports we're listening to, only the ports we want people to be able to get to.  
 State is pretty handy, but it's also a bit tricky. You can shoot yourself in the foot in strange and mysterious ways. Consider the following ruleset:
 
     pass in quick on tun0 proto tcp from any to 20.20.20.1/32 port = 23
@@ -442,7 +489,7 @@ State is pretty handy, but it's also a bit tricky. You can shoot yourself in the
     block in quick all
     block out quick all
 
-At first glance, this seems to be a good setup. We allow incoming sessions to port 23, and outgoing sessions anywhere. Naturally packets going to port 23 will have reply packets, but the ruleset is setup in such a way that the pass out rule will generate a state entry and everything will work perfectly. At least, you'd think so.
+At first glance, this seems to be a good setup. We allow incoming sessions to port 23, and outgoing sessions anywhere. Naturally packets going to port 23 will have reply packets, but the ruleset is setup in such a way that the pass out rule will generate a state entry and everything will work perfectly. At least, you'd think so.  
 The unfortunate truth is that after 60 seconds of idle time the state entry will be closed (as opposed to the normal 5 days). This is because the state tracker never saw the original SYN packet destined to port 23, it only saw the SYN ACK. IPF is very good about following TCP sessions from start to finish, but it's not very good about coming into the middle of a connection, so rewrite the rule to look like this:
 
     pass in quick on tun0 proto tcp from any to 20.20.20.1/32 port = 23 keep state
@@ -450,7 +497,7 @@ The unfortunate truth is that after 60 seconds of idle time the state entry will
     block in quick all
     block out quick all
 
-The additional of this rule will enter the very first packet into the state table and everything will work as expected. Once the 3-way handshake has been witness by the state engine, it is marked in 4/4 mode, which means it's setup for long-term data exchange until such time as the connection is torn down (wherein the mode changes again. You can see the current modes of your state table with ipfstat -s.
+The additional of this rule will enter the very first packet into the state table and everything will work as expected. Once the 3-way handshake has been witness by the state engine, it is marked in 4/4 mode, which means it's setup for long-term data exchange until such time as the connection is torn down (wherein the mode changes again. You can see the current modes of your state table with `ipfstat -s`.
 
 
 # Stateful UDP
@@ -474,7 +521,7 @@ The reply packet matches the state criteria and is let through. At that same mom
 ICMP behaves identically to UDP state.
 
 
-# FIN Scan Detection; "flags" Keyword, "keep frags" Keyword
+## FIN Scan Detection; `flags` Keyword, `keep frags` Keyword
 
 Lets go back to the 4 rule set from the previous section:
 
@@ -483,7 +530,7 @@ Lets go back to the 4 rule set from the previous section:
     block in quick all
     block out quick all
 
-This is almost, but not quite, satisfactory. The problem is that it's not just SYN packets that're allowed to go to port 23, any old packet can get through. We can change this by using the flags option:
+This is almost, but not quite, satisfactory. The problem is that it's not just SYN packets that're allowed to go to port 23, any old packet can get through. We can change this by using the `flags` option:
 
     pass in quick on tun0 proto tcp from any to 20.20.20.1/32 port = 23 flags S keep state
     pass out quick on tun0 proto tcp from any to any flags S keep state
