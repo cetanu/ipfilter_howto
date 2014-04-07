@@ -19,33 +19,33 @@ For greater understanding of firewalls, the authors recommend reading
 - TCP/IP Illustrated, Volume 1, *Stevens, Addison-Wesley*.
 
 
-### <sub>Disclaimer</sub>
+### Disclaimer
 
-<sub>The authors of this document are not responsible for any damages incurred due to actions taken based on this document. This document is meant as an introduction to building a firewall based on IP-Filter. If you do not feel comfortable taking responsibility for your own actions, you should stop reading this document and hire a qualified security professional to install your firewall for you.</sub>
-
-
-### <sub>Copyright</sub>
-
-<sub>Unless otherwise stated, HOWTO documents are copyrighted by their respective authors. HOWTO documents may be reproduced and distributed in whole or in part, in any medium physical or electronic, as long as this copyright notice is retained on all copies. Commercial redistribution is allowed and encouraged; however, the authors would like to be notified of any such distributions.</sub>
-
-<sub>All translations, derivative works, or aggregate works incorporating any HOWTO documents must be covered under this copyright notice. That is, you may not produce a derivative work from a HOWTO and impose additional restrictions on its distribution. Exceptions to these rules may be granted under certain conditions; please contact the HOWTO coordinator.</sub>
-
-<sub>In short, we wish to promote dissemination of this information through as many channels as possible. However, we do wish to retain copyright on the HOWTO documents, and would like to be notified of any plans to redistribute the HOWTOs.</sub>
+The authors of this document are not responsible for any damages incurred due to actions taken based on this document. This document is meant as an introduction to building a firewall based on IP-Filter. If you do not feel comfortable taking responsibility for your own actions, you should stop reading this document and hire a qualified security professional to install your firewall for you.
 
 
-# Where to obtain the important pieces
+### Copyright
+
+Unless otherwise stated, HOWTO documents are copyrighted by their respective authors. HOWTO documents may be reproduced and distributed in whole or in part, in any medium physical or electronic, as long as this copyright notice is retained on all copies. Commercial redistribution is allowed and encouraged; however, the authors would like to be notified of any such distributions.
+
+All translations, derivative works, or aggregate works incorporating any HOWTO documents must be covered under this copyright notice. That is, you may not produce a derivative work from a HOWTO and impose additional restrictions on its distribution. Exceptions to these rules may be granted under certain conditions; please contact the HOWTO coordinator.
+
+In short, we wish to promote dissemination of this information through as many channels as possible. However, we do wish to retain copyright on the HOWTO documents, and would like to be notified of any plans to redistribute the HOWTOs.
+
+
+## Where to obtain the important pieces
 
 The official IPF homepage is at: <http://coombs.anu.edu.au/~avalon/ip-filter.html>
 
 The most up-to-date version of this document can be found at: <http://www.obfuscation.org/ipf/>
 
 
-# Basic Firewalling
+## Basic Firewalling
 
 This section is designed to familiarize you with ipfilter's syntax, and firewall theory in general. The features discussed here are features you'll find in any good firewall package. This section will give you a good foundation to make reading and understanding the advanced section very easy. It must be emphasized that this section alone is not enough to build a good firewall, and that the advanced section really is required reading for anybody who wants to build an effective security system.
 
 
-# Config File Dynamics, Order and Precedence
+## Config File Dynamics, Order and Precedence
 
 IPF (IP Filter) has a config file (as opposed to say, running some command again and again for each new rule).
 
@@ -54,7 +54,7 @@ The config file drips with Unix: There's one rule per line, the "#" mark denotes
 Extraneous whitespace is allowed, and is encouraged to keep the rules readable.
 
 
-# Basic Rule Processing
+## Basic Rule Processing
 
 The rules are processed from top to bottom, each one appended after another.
 
@@ -108,7 +108,7 @@ It's a good time to point out that even if the ruleset had been
 that the packet would still have gone through. There is no cumulative effect. The last matching rule always takes precedence.
 
 
-# Controlling Rule Processing
+## Controlling Rule Processing
 
 If you have experience with other packet filters, you may find this layout to be confusing, and you may be speculating that there are problems with portability with other filters and speed of rule matching. Imagine if you had 100 rules and most of the applicable ones were the first 10. There would be a terrible overhead for every packet coming in to go through 100 rules every time.
 
@@ -131,7 +131,7 @@ This rule is never encountered. It could just as easily not be in the config fil
 Having half a config file laid to waste is rarely a desirable state. On the other hand, IPF is here to block packets and as configured, it's doing a very good job. Nonetheless, IPF is also here to let some packets through, so a change to the ruleset to make this possible is called for.
 
 
-# Basic filtering by IP address
+## Basic filtering by IP address
 
 IPF will match packets on many criteria. The one that we most commonly think of is the IP address.  
 There are some blocks of address space from which we should never get traffic.  
@@ -167,7 +167,7 @@ At this point you can build a fairly extensive set of definitive addresses which
 The first three address blocks are the [unroutable IP space](http://www.faqs.org/rfcs/rfc1918.html).  
 
 
-# Controlling Your Interfaces
+## Controlling Your Interfaces
 
 It seems very frequent that companies have internal networks before they want a link to the outside world. In fact, it's probably reasonable to say that's the main reason people consider firewalls in the first place. The machine that bridges the outside world to the inside world and vice versa is the router.  
 What separates the router from any other machine is simple: It has more than one interface.  
@@ -180,7 +180,7 @@ Every packet you recieve comes from a network interface; every packet you transm
 In this case, the `on` keyword means that that data is coming in on the named interface. If a packet comes in `on tun0`, the first rule will block it. If a packet comes in `on lo0` or in `on xl0`, the first rule will not match, the second rule will, the packet will be passed.
 
 
-# Using IP Address and Interface Together
+## Using IP Address and Interface Together
 
 It's an odd state of affairs when one decides it best to have the `tun0` interface up, but not allow any data to be recieved from it.  
 The more criteria the firewall matches against, the tighter (or looser) the firewall can become. Maybe you want data from `tun0`, but not from `192.168.0.0/16`? This is the start of a powerful firewall.
@@ -220,7 +220,7 @@ You can accomplish this particularly easily with what you already know of IPF. T
     pass in all
 
 
-# Bi-Directional Filtering; The `out` Keyword
+## Bi-Directional Filtering; The `out` Keyword
 
 Up until now, we've been passing or blocking inbound traffic. To clarify, inbound traffic is all traffic that enters the firewall on any interface. Conversely, outbound traffic is all traffic that leaves on any interface (whether locally generated or simply passing through). This means that all packets coming in are not only filtered as they enter the firewall, they're also filtered as they exit. Thusfar there's been an implied `pass out all` that may or may not be desirable.
 <sub>Just as you may pass and block incoming traffic, you may do the same with outgoing traffic.</sub>
@@ -247,7 +247,7 @@ As another viewpoint, one might suppose that because nobody can send spoofed pac
 You'll likely find a number of uses for blocking outbound packets. One thing to always keep in mind is that in and out directions are in reference to your firewall, never any other machine.
 
 
-# Logging What Happens; The `log` Keyword
+## Logging What Happens; The `log` Keyword
 
 Up to this point, all blocked and passed packets have been silently blocked and silently passed. Usually you want to know if you're being attacked rather than wonder if that firewall is really buying you any added benefits.  
 While I wouldn't want to log every passed packet, and in some cases every blocked packet, I would want to know about the blocked packets from `20.20.20.0/24`. To do this, we add the log keyword:
@@ -279,7 +279,7 @@ This brings our total ruleset to look something like this:
     pass in all
 
     
-# Complete Bi-Directional Filtering By Interface
+## Complete Bi-Directional Filtering By Interface
 
 So far we have only presented fragments of a complete ruleset. When you're actually creating your ruleset, you should setup rules for every direction and every interface. The default state of ipfilter is to pass packets. It is as though there were an invisible rule at the beginning which states pass in all and pass out all. Rather than rely on some default behaviour, make everything as specific as possible, interface by interface, until every base is covered.
 First we'll start with the lo0 interface, which wants to run wild and free. Since these are programs talking to other on the local system, go ahead and keep it unrestricted:
@@ -311,14 +311,14 @@ Finally, there's the tun0 interface, which we've been half-filtering with up unt
 This is a pretty significant amount of filtering already, protecting `20.20.20.0/24` from being spoofed or being used for spoofing. Future examples will continue to show one-sideness, but keep in mind that it's for brevity's sake, and when setting up your own ruleset, adding rules for every direction and every interface is necessary.
 
 
-# Controlling Specific Protocols; The `proto` Keyword
+## Controlling Specific Protocols; The `proto` Keyword
 
 Denial of Service attacks are as rampant as buffer overflow exploits. Many denial of service attacks rely on glitches in the OS's TCP/IP stack. Frequently, this has come in the form of ICMP packets. Why not block them entirely?
 block in log quick on tun0 proto icmp from any to any
 Now any ICMP traffic coming in from tun0 will be logged and discarded.
 
 
-# Filtering ICMP with the "icmp-type" Keyword; Merging Rulesets
+## Filtering ICMP with the `icmp-type` Keyword; Merging Rulesets
 
 Of course, dropping all ICMP isn't really an ideal situation. Why not drop all ICMP? Well, because it's useful to have partially enabled. So maybe you want to keep some types of ICMP traffic and drop other kinds. If you want ping and traceroute to work, you need to let in ICMP types 0 and 11. Strictly speaking, this might not be a good idea, but if you need to weigh security against convenience, IPF lets you do it.
 
@@ -364,7 +364,7 @@ Because we block spoofed traffic before the ICMP rules are processed, a spoofed 
 It's very important to keep such situations in mind when merging rules.
 
 
-# TCP and UDP Ports; The "port" Keyword
+## TCP and UDP Ports; The `port` Keyword
 
 Now that we've started blocking packets based on protocol, we can start blocking packets based on specific aspects of each protocol. The most frequently used of these aspects is the port number.  
 Services such as rsh, rlogin, and telnet are all very convenient to have, but also hideously insecure against network sniffing and spoofing.  
@@ -427,7 +427,7 @@ This machine will pass in port 80 traffic for 20.20.20.1, and deny everything el
 For basic firewalling, this is all one needs.
 
 
-# Implicit Allow; The `keep state` Rule
+## Implicit Allow; The `keep state` Rule
 
 The job of your firewall is to prevent unwanted traffic getting to point B from point A.
 We have general rules which say "as long as this packet is to port 23, it's okay."  
@@ -500,7 +500,7 @@ The unfortunate truth is that after 60 seconds of idle time the state entry will
 The additional of this rule will enter the very first packet into the state table and everything will work as expected. Once the 3-way handshake has been witness by the state engine, it is marked in 4/4 mode, which means it's setup for long-term data exchange until such time as the connection is torn down (wherein the mode changes again. You can see the current modes of your state table with `ipfstat -s`.
 
 
-# Stateful UDP
+## Stateful UDP
 
 UDP is stateless so naturally it's a bit harder to do a reliable job of keeping state on it. Nonetheless, ipf does a pretty good job. When machine A sends a UDP packet to machine B with source port X and destination port Y, ipf will allow a reply from machine by to machine A with source port Y and destination port Y. This is is a short term state entry, a mere 60 seconds.  
 Here's an example of what happens if we use nslookup to get the IP address of www.3com.com:
@@ -516,7 +516,7 @@ The packet is from 20.20.20.1, port 2111, destined for 198.41.0.5, port 53. A 60
 The reply packet matches the state criteria and is let through. At that same moment that packet is let through, the state gateway is closed and no new incoming packets will be allowed in, even if they claim to be from the same place.
 
 
-# Stateful ICMP
+## Stateful ICMP
 
 ICMP behaves identically to UDP state.
 
@@ -547,7 +547,7 @@ Now only TCP packets, destined for 20.20.20.1, at port 23, with a lone SYN flag 
 This works because every packet that should be allowed through makes it into the state table before the blocking rules are reached. The only scan this won't detect is a SYN scan itself. If you're truely worried about that, you might even want to log all initial SYN packets.
 
 
-# Responding To a Blocked Packet
+## Responding To a Blocked Packet
 
 So far, all of our blocked packets have been dumped on the floor, logged or not, we've never sent anything back to the originating host. Sometimes this isn't the most desirable of responses because in doing so, we actually tell the attacker that a packet filter is present. It seems a far better thing to misguide the attacker into believing that, while there's no packet filter running, there's likewise no services to break into. This is where fancier blocking comes into play.
 When a service isn't running on a Unix system, it normally lets the remote host know with some sort of return packet. In TCP, this is done with an RST (Reset) packet. When blocking a TCP packet, IPF can actually return an RST to the origin by using the return-rst keyword.
@@ -578,7 +578,7 @@ However, when using `return-icmp`, you'll notice that it's not very stealthy, an
     block return-icmp-as-dest(port-unr) in log on tun0 proto udp from any to 20.20.20.0/24 port = 111
 
 
-# Fancy Logging Techniques
+## Fancy Logging Techniques
 
 It is important to note that the presence of the log keyword only ensures that the packet will be available to the ipfilter logging device; `/dev/ipl`. In order to actually see this log information, one must be running the `ipmon` utility (or some other utility that reads from `/dev/ipl`). The typical usage of `log` is coupled with `ipmon -s` to log the information to syslog. As of ipfilter 3.3, one can now even control the logging behavior of syslog by using log level keywords, as in rules such as this:
 
@@ -590,7 +590,7 @@ Another useful thing you can do with the logs is to keep track of interesting pi
 You should limit the use of body logging, as it makes your logs very verbose, but for certain applications, it is often handy to be able to go back and take a look at the packet, or to send this data to another application that can examine it further.
 
 
-# Putting It All Together
+## Putting It All Together
 
 So now we have a pretty tight firewall, but it can still be tighter. Some of the original ruleset we wiped clean is actually very useful.  
 I'd suggest bringing back all the anti-spoofing stuff. This leaves us with:
@@ -608,7 +608,7 @@ I'd suggest bringing back all the anti-spoofing stuff. This leaves us with:
     pass in quick on tun0 proto tcp from any to 20.20.20.1/32 port = 80 flags S keep state
 
 
-# Improving Performance With Rule Groups
+## Improving Performance With Rule Groups
 
 Let's extend our use of our firewall by creating a much more complicated, and we hope more applicable to the real world, example configuration For this example, we're going to change the interface names, and network numbers.   
 Let's assume that we have three interfaces in our firewall with interfaces `xl0`, `xl1`, and `xl2`.
@@ -684,7 +684,7 @@ Now you can see the rule groups in action. For a host on the `xl2` network, we c
 Depending on your situation, it may be prudent to group your rules by protocol, or various machines, or netblocks, or whatever makes it flow smoothly.
 
 
-# "Fastroute"; The Keyword of Stealthiness
+## `Fastroute`; The Keyword of Stealthiness
 
 Even though we're forwarding some packets, and blocking other packets, we're typically behaving like a well behaved router should by decrementing the TTL on the packet and acknowledging to the entire world that yes, there is a hop here. But we can hide our presence from inquisitive applications like unix traceroute which uses UDP packets with various TTL values to map the hops between two sites. If we want incoming traceroutes to work, but we do not want to announce the presence of our firewall as a hop, we can do so with a rule like this:
 
@@ -695,13 +695,13 @@ There's a reason we used `block quick` in our example, too. If we had used `pass
 It should be noted, however, that most Unix kernels (and certainly the ones underlying the systems that ipfilter usually runs on) have far more efficient routing code than what exists in ipfilter, and this keyword should not be thought of as a way to improve the operating speed of your firewall, and should only be used in places where stealth is an issue.
 
 
-# NAT and Proxies
+## NAT and Proxies
 
 Outside of the corporate environment, one of the biggest enticements of firewall technology to the end user is the ability to connect several computers through a common external interface, often without the approval, knowledge, or even consent of their service provider. To those familiar with Linux, this concept is called IP Masquerading, but to the rest of the world it is known by the more obscure name of **Network Address Translation**, or **NAT** for short.  
 <sub>To be pedantic, what IPFilter provides is really called **NPAT**, for Network and Port Address Translation, which means we can change any of the source and destination IP Addresses and their source and destination ports. True NAT only allows one to change the addresses.</sub>
 
 
-# Mapping Many Addresses Into One Address
+## Mapping Many Addresses Into One Address
 
 The basic use of NAT accomplishes the same thing that Linux's IP Masquerading function does, and it does it with one simple rule:
 
@@ -725,7 +725,7 @@ Some of you may be wondering what happens to the source port when the mapping ha
 Our rule now shoehorns all the translated connections (which can be tcp, udp, or tcp/udp) into the port range of 20000 to 30000.
 
 
-# Mapping Many Addresses Into a Pool of Addresses
+## Mapping Many Addresses Into a Pool of Addresses
 
 Another use common use of NAT is to take a small statically allocated block of addresses and map many computers into this smaller address space. This is easy to accomplish using what you already know about the map and `portmap` keywords by writing a rule like so:
 
@@ -736,7 +736,7 @@ Also, there may be instances where a remote application requires that multiple c
     map-block tun0 192.168.1.0/24 -> 20.20.20.0/24
 
 
-# One to One Mappings
+## One to One Mappings
 
 Occasionally it is desirable to have a system with one IP address behind the firewall to appear to have a completely different IP address. One example of how this would work would be a lab of computers which are then attached to various networks that are to be put under some kind of test. In this example, you would not want to have to reconfigure the entire lab when you could place a NAT system in front and change the addresses in one simple place. We can do that with the `bimap` keyword, for bidirectional mapping. `Bimap` has some additional protections on it to ensure a known state for the connection, whereas the map keyword is designed to allocate an address and a source port and rewrite the packet and go on with life.
 
@@ -745,7 +745,7 @@ Occasionally it is desirable to have a system with one IP address behind the fir
 will accomplish the mapping for one host.
 
 
-# Spoofing Services
+## Spoofing Services
 
 Spoofing services? What does that have to do with anything? Plenty. Lets pretend that we have a web server running on `20.20.20.5`, and since we've gotten increasingly suspicious of our network security, we desire to not run this server on port 80 since that requires a brief lifespan as the root user. But how do we run it on a less privileged port of 8000 in this world of "anything dot com"? How will anyone find our server? We can use the redirection facilities of NAT to solve this problem by instructing it to remap any connections destined for `20.20.20.5:80` to really point to `20.20.20.5:8000`. This uses the `rdr` keyword:
 
@@ -771,28 +771,31 @@ The `rdr` function is applied to packets that enter the firewall on the specifie
 <sub>This includes `127.0.0.1`, by the way. That's on `lo0`. Neat, huh?</sub>
 
 
-# Transparent Proxy Support; Redirection Made Useful
+## Transparent Proxy Support; Redirection Made Useful
 
 Since you're installing a firewall, you may have decided that it is prudent to use a proxy for many of your outgoing connections so that you can further tighten your filter rules protecting your internal network, or you may have run into a situation that the NAT mapping process does not currently handle properly. This can also be accomplished with a redirection statement:
 
     rdr xl0 0.0.0.0/0 port 21 -> 127.0.0.1 port 21
 
 This statement says that any packet coming in on the `xl0` interface destined for any address (`0.0.0.0/0`) on the ftp port should be rewritten to connect it with a proxy that is running on the NAT system on port 21.
+
 This specific example of FTP proxying does lead to some complications when used with web browsers or other automatic-login type clients that are unaware of the requirements of communicating with the proxy. There are patches for TIS Firewall Toolkit's ftp-gw to mate it with the nat process so that it can determine where you were trying to go and automatically send you there. Many proxy packages now work in a transparent proxy environment (Squid for example, located at <http://squid.nlanr.net>, works fine.)
+
 This application of the `rdr` keyword is often more useful when you wish to force users to authenticate themselves with the proxy. (For example, you desire your engineers to be able to surf the web, but you would rather not have your call-center staff doing so.)
 
 
-# Magic Hidden Within NAT; Application Proxies
+## Magic Hidden Within NAT; Application Proxies
 
 Since ipnat provides a method to rewrite packets as they traverse the firewall, it becomes a convenient place to build in some application level proxies to make up for well known deficiencies of that application and typical firewalls. For example; FTP. We can make our firewall pay attention to the packets going across it and when it notices that it's dealing with an Active FTP session, it can write itself some temporary rules, much like what happens with keep state, so that the FTP data connection works. To do this, we use a rule like so:
 
     map tun0 192.168.1.0/24 -> 20.20.20.1/32 proxy port ftp ftp/tcp
 
 You must always remember to place this proxy rule before any portmap rules, otherwise when portmap comes along and matches the packet and rewrites it before the proxy gets a chance to work on it. Remember that ipnat rules are first-match.
+
 There also exist proxies for "rcmd" (which we suspect is berkeley r-* commands which should be forbidden anyway, thus we haven't looked at what this proxy does) and "raudio" for Real Audio PNM streams. Likewise, both of these rules should be put before any portmap rules, if you're doing NAT.
 
 
-# Loading and Manipulating Filter Rules; The ipf Utility
+## Loading and Manipulating Filter Rules; The `ipf` Utility
 
 IP Filter rules are loaded by using the ipf utility. The filter rules can be stored in any file on the system, but typically these rules are stored in /etc/ipf.rules, /usr/local/etc/ipf.rules, or /etc/opt/ipf/ipf.rules.
 IP Filter has two sets of rules, the active set and the inactive set. By default, all operations are performed on the active set. You can manipulate the inactive set by adding -I to the ipf command line. The two sets can be toggled by using the -s command line option. This is very useful for testing new rule sets without wiping out the old rule set.
@@ -800,20 +803,20 @@ Rules can also be removed from the list instead of added by using the -r command
 In summary, the easiest way to load a rule set is ipf -Fa -f /etc/ipf.rules. For more complicated manipulations of the rule set, please see the ipf(1) man page.
 
 
-# Loading and Manipulating NAT Rules; The ipnat Utility
+## Loading and Manipulating NAT Rules; The `ipnat` Utility
 
 NAT rules are loaded by using the ipnat utility. The NAT rules can be stored in any file on the system, but typically these rules are stored in /etc/ipnat.rules, /usr/local/etc/ipnat.rules, or /etc/opt/ipf/ipnat.rules.
 Rules can also be removed from the list instead of added by using the -r command line option, but it is generally a safer idea to flush the rule set that you're working on with -C and completely reload it when making changes. Any active mappings are not affected by -C, and can be removed with -F.
 NAT rules and active mappings can be examined with the -l command line option.
-In summary, the easiest way to load a NAT rule set is ipnat -CF -f /etc/ipnat.rules.
+In summary, the easiest way to load a NAT rule set is `ipnat -CF -f /etc/ipnat.rules`.
 
 
-# Monitoring and Debugging
+## Monitoring and Debugging
 
 There will come a time when you are interested in what your firewall is actually doing, and ipfilter would be incomplete if it didn't have a full suite of status monitoring tools.
 
 
-# The ipfstat utility
+## The `ipfstat` utility
 
 In its simplest form, ipfstat displays a table of interesting data about how your firewall is performing, such as how many packets have been passed or blocked, if they were logged or not, how many state entries have been made, and so on. Here's an example of something you might see from running the tool:
 
@@ -845,6 +848,7 @@ ipfstat is also capable of showing you your current rule list. Using the -i or t
     430918 pass out quick on ppp0 proto tcp/udp from 20.20.20.0/24 to any keep state keep frags
 
 From this, we can see that perhaps there's something abnormal going on, since we've got a lot of blocked packets outbound, even with a very permissive pass out rule. Something here may warrant further investigation, or it may be functioning perfectly by design. ipfstat can't tell you if your rules are right or wrong, it can only tell you what is happening because of your rules.
+
 To further debug your rules, you may want to use the -n flag, which will show the rule number next to each rule.
 
     # ipfstat -on
@@ -874,7 +878,7 @@ The final piece of really interesting information that ipfstat can provide us is
 Here we see that we have one state entry for a TCP connection. The output will vary slightly from version to version, but the basic information is the same. We can see in this connection that we have a fully established connection (represented by the 4/4 state. Other states are incomplete and will be documented fully later.) We can see that the state entry has a time to live of 240 hours, which is an absurdly long time, but is the default for an established TCP connection. This TTL counter is decremented every second that the state entry is not used, and will finally result in the connection being purged if it has been left idle. The TTL is also reset to 864000 whenever the state IS used, ensuring that the entry will not time out while it is being actively used. We can also see that we have passed 196 packets consisting of about 17kB worth of data over this connection. We can see the ports for both endpoints, in this case 987 and 22; which means that this state entry represents a connection from 100.100.100.1 port 987 to 20.20.20.1 port 22. The really big numbers in the second line are the TCP sequence numbers for this connection, which helps to ensure that someone isn't easily able to inject a forged packet into your session. The TCP window is also shown. The third line is a synopsis of the implicit rule that was generated by the keep state code, showing that this connection is an inbound connection.
 
 
-# The ipmon utility
+## The `ipmon` utility
 
 ipfstat is great for collecting snapshots of what's going on on the system, but it's often handy to have some kind of log to look at and watch events as they happen in time. ipmon is this tool. ipmon is capable of watching the packet log (as created with the log keyword in your rules), the state log, or the nat log, or any combination of the three. This tool can either be run in the foreground, or as a daemon which logs to syslog or a file. If we wanted to watch the state table in action, ipmon -o S would show this:
 
@@ -907,7 +911,7 @@ This would be a redirection to an identd that lies to provide ident service for 
 0. Specific Applications of IP Filter - Things that don't fit, but should be mentioned anyway.
 
 
-# Keep State With Servers and Flags.
+## Keep State With Servers and Flags.
 
 Keeping state is a good thing, but it's quite easy to make a mistake in the direction that you want to keep state in. Generally, you want to have a keep state keyword on the first rule that interacts with a packet for the connection. One common mistake that is made when mixing state tracking with filtering on flags is this:
 
@@ -931,25 +935,31 @@ or:
 Either of these sets of rules will result in a fully established state entry for a connection to your server.
 
 
-# Coping With FTP
+## Coping With FTP
 
 FTP is one of those protocols that you just have to sit back and ask "What the heck were they thinking?" FTP has many problems that the firewall administrator needs to deal with. What's worse, the problems the administrator must face are different between making ftp clients work and making ftp servers work.
+
 Within the FTP protocol, there are two forms of data transfer, called active and passive. Active transfers are those where the server connects to an open port on the client to send data. Conversely, passive transfers are those where the client connects to the server to recieve data.
 
 
-# Running an FTP Server
+## Running an FTP Server
 
 In running an FTP server, handling Active FTP sessions is easy to setup. At the same time, handling Passive FTP sessions is a big problem. First we'll cover how to handle Active FTP, then move on to Passive. Generally, we can handle Active FTP sessions like we would an incoming HTTP or SMTP connection; just open the ftp port and let keep state do the rest:
-pass in quick proto tcp from any to 20.20.20.20/32 port = 21 flags S keep state
-pass out proto tcp all keep state
+
+    pass in quick proto tcp from any to 20.20.20.20/32 port = 21 flags S keep state
+    pass out proto tcp all keep state
+
 These rules will allow Active FTP sessions, the most common type, to your ftp server on 20.20.20.20.
+
 The next challenge becomes handling Passive FTP connections. Web browsers default to this mode, so it's becoming quite popular and as such it should be supported. The problem with passive connections are that for every passive connection, the server starts listening on a new port (usually above 1023). This is essentially like creating a new unknown service on the server. Assuming we have a good firewall with a default-deny policy, that new service will be blocked, and thus Active FTP sessions are broken. Don't despair! There's hope yet to be had.
+
 A person's first inclination to solving this problem might be to just open up all ports above 1023. In truth, this will work:
 
     pass in quick proto tcp from any to 20.20.20.20/32 port > 1023 flags S keep state
     pass out proto tcp all keep state
 
 This is somewhat unsatisfactory, though. By letting everything above 1023 in, we actually open ourselves up for a number of potential problems. While 1-1023 is the designated area for server services to run, numerous programs decided to use numbers higher than 1023, such as nfsd and X.
+
 The good news is that your FTP server gets to decide which ports get assigned to active sessions. This means that instead of opening all ports above 1023, you can allocate ports 15001-19999 as ftp ports and only open that range of your firewall up. In wu-ftpd, this is done with the passive ports option in ftpaccess. Please see the man page on ftpaccess for details in wu-ftpd configuration. On the ipfilter side, all we need do is setup corresponding rules:
 
     pass in quick proto tcp from any to 20.20.20.20/32 port 15000 >< 20000 flags S keep state
@@ -958,7 +968,7 @@ The good news is that your FTP server gets to decide which ports get assigned to
 If even this solution doesn't satisfy you, you can always hack IPF support into your FTP server, or FTP server support into IPF.
 
 
-# Running an FTP Client
+## Running an FTP Client
 
 While FTP server support is still less than perfect in IPF, FTP client support has been working well since 3.3.3. As with FTP servers, there are two types of ftp client transfers: passive and active.
 The simplest type of client transfer from the firewall's standpoint is the passive transfer. Assuming you're keeping state on all outbound tcp sessions, passive transfers will work already. If you're not doing this already, please consider the following:
@@ -972,52 +982,52 @@ The second type of client transfer, active, is a bit more troublesome, but nonet
 For more details on ipfilter's internal proxies, see section 3.6
 
 
-# Assorted Kernel Variables
+## Assorted Kernel Variables
 
 There are some useful kernel tunes that either need to be set for ipf to function, or are just generally handy to know about for building firewalls. The first major one you must set is to enable IP Forwarding, otherwise ipf will do very little, as the underlying ip stack won't actually route packets.
 
-## IP Forwarding:
+### IP Forwarding:
 
-### openbsd:
+openbsd:
 
     net.inet.ip.forwarding=1
     
-### freebsd:
+freebsd:
 
     net.inet.ip.forwarding=1
 
-### solaris:
+solaris:
 
     ndd -set /dev/ip ip_forwarding 1
 
-## Ephemeral Port Adjustment:
+### Ephemeral Port Adjustment:
 
-### openbsd:
+openbsd:
 
     net.inet.ip.portfirst = 25000
 
-### freebsd:
+freebsd:
 
     net.inet.ip.portrange.first = 25000 net.inet.ip.portrange.last = 49151
     
-### solaris:
+solaris:
 
     ndd -set /dev/tcp tcp_smallest_anon_port 25000
     ndd -set /dev/tcp tcp_largest_anon_port 65535
 
-## Other Useful Values:
+### Other Useful Values:
 
-### openbsd:
+openbsd:
 
     net.inet.ip.sourceroute = 0
     net.inet.ip.directed-broadcast = 0
 
-### freebsd:
+freebsd:
 
     net.inet.ip.sourceroute=0
     net.ip.accept_sourceroute=0
 
-### solaris:
+solaris:
 
     ndd -set /dev/ip ip_forward_directed_broadcasts 0
     ndd -set /dev/ip ip_forward_src_routed 0
@@ -1049,7 +1059,7 @@ In addition, freebsd has some ipf specific sysctl variables.
 This section doesn't necessarily teach you anything new about ipf, but it may raise an issue or two that you haven't yet thought up on your own, or tickle your brain in a way that you invent something interesting that we haven't thought of.
 
 
-# Localhost Filtering
+## Localhost Filtering
 
 A long time ago at a university far, far away, Weitse Venema created the tcp-wrapper package, and ever since, it's been used to add a layer of protection to network services all over the world. This is good. But, tcp-wrappers have flaws. For starters, they only protect TCP services, as the name suggests. Also, unless you run your service from inetd, or you have specifically compiled it with libwrap and the appropriate hooks, your service isn't protected. This leaves gigantic holes in your host security. We can plug these up by using ipf on the local host. For example, my laptop often gets plugged into or dialed into networks that I don't specifically trust, and so, I use the following rule set:
 
@@ -1066,10 +1076,11 @@ A long time ago at a university far, far away, Weitse Venema created the tcp-wra
 It's been like that for quite a while, and I haven't suffered any pain or anguish as a result of having ipf loaded up all the time. If I wanted to tighten it up more, I could switch to using the NAT ftp proxy and I could add in some rules to prevent spoofing. But even as it stands now, this box is far more restrictive about what it presents to the local network and beyond than the typical host does. This is a good thing if you happen to run a machine that allows a lot of users on it, and you want to make sure one of them doesn't happen to start up a service they wern't supposed to. It won't stop a malicious hacker with root access from adjusting your ipf rules and starting a service anyway, but it will keep the "honest" folks honest, and your weird services safe, cozy and warm even on a malicious LAN. A big win, in my opinion. Using local host filtering in addition to a somewhat less-restrictive "main firewall" machine can solve many performance issues as well as political nightmares like "Why doesn't ICQ work?" and "Why can't I put a web server on my own workstation! It's MY WORKSTATION!!" Another very big win. Who says you can't have security and convienence at the same time?
 
 
-# What Firewall? Transparent filtering.
+## What Firewall? Transparent filtering.
 
 One major concern in setting up a firewall is the integrity of the firewall itself. Can somebody break into your firewall, thereby subverting its ruleset? This is a common problem administrators must face, particularly when they're using firewall solutions on top of their Unix/NT machines. Some use it as an arguement for blackbox hardware solutions, under the flawed notion that inherant obscurity of their closed system increases their security. We have a better way.
 Many network admins are familiar with the common ethernet bridge. This is a device that connects two separate ethernet segments to make them one. An ethernet bridge is typically used to connect separate buildings, switch network speeds, and extend maximum wire lengths. Hubs and switches are common bridges, sometimes they're just 2 ported devices called repeaters. Recent versions of Linux, OpenBSD, NetBSD, and FreeBSD include code to convert $1000 PCs into $10 bridges, too! What all bridges tend to have in common is that though they sit in the middle of a connection between two machines, the two machines don't know the bridge is there. Enter ipfilter and OpenBSD.
+
 Ethernet bridging takes place at Layer2 on the ISO stack. IP takes place on Layer3. IP Filter in primarily concerned with Layer3, but dabbles in Layer2 by working with interfaces. By mixing IP filter with OpenBSD's bridge device, we can create a firewall that is both invisible and unreachable. The system needs no IP address, it doesn't even need to reveal its ethernet address. The only telltale sign that the filter might be there is that latency is somewhat higher than a piece of cat5 would normally make it, and that packets don't seem to make it to their final destination.
 The setup for this sort of ruleset is surprisingly simple, too. In OpenBSD, the first bridge device is named bridge0. Say we have two ethernet cards in our machine as well, xl0 and xl1. To turn this machine into a bridge, all one need do is enter the following three commands:
 
@@ -1078,6 +1089,7 @@ The setup for this sort of ruleset is surprisingly simple, too. In OpenBSD, the 
     ifconfig xl1 up
 
 At ths point, all traffic ariving on xl0 is sent out xl1 and all traffic on xl1 is sent out xl0. You'll note that neither interface has been assigned an IP address, nor do we need assign one. All things considered, it's likely best we not add one at all.
+
 Rulesets behave essentially the as the always have. Though there is a bridge0 interface, we don't filter based on it. Rules continue to be based upon the particular interface we're using, making it important which network cable is plugged into which network card in the back of the machine. Lets start with some basic filtering to illistrate what's happened. Assume the network used to look like this:
 
     20.20.20.1 <---------------------------------> 20.20.20.0/24 network hub
@@ -1119,10 +1131,11 @@ So far, we've been filtering by interface and protocol only. Even though bridgin
     block in quick on xl0
 
 Now we have a network where 20.20.20.2 is a zone serving name server, 20.20.20.3 is an incoming mail server, and 20.20.20.7 is a web server.
+
 Bridged IP Filter is not yet perfect, we must confess. You'll note that all the rules are setup using the in direction instead of a combination of in and out. This is because the out direction seems presently broken with bridging in OpenBSD. Using IP Filter with bridging makes the use of IPF's NAT features inadvisable, if not downright dangerous. The first problem is that it would give away that there's a filtering bridge. The second problem would be that the bridge has no IP address to masquerade with, which will most assuredly lead to confusion and perhaps a kernel panic to boot.
 
 
-# Using Transparent Filtering to Fix Network Design Mistakes
+## Using Transparent Filtering to Fix Network Design Mistakes
 
 Many organizations started using IP well before they thought a firewall or a subnet would be a good idea. Now they have class-C sized networks or larger that include all their servers, their workstations, their routers, coffee makers, everything. The horror! Renumbering with propper subnets, trust levels, filters, and so are in both time consuming and expensive. The expense in hardware and man hours alone is enough to make most organizations unwilling to really solve the problem, not to mention the downtime involved. The typical problem network looks like this:
 
@@ -1133,6 +1146,7 @@ Many organizations started using IP well before they thought a firewall or a sub
     20.20.20.5 intelligent switch 20.20.20.10 win95 workstation
 
 Only it's about 20 times larger and messier and frequently undocumented. Ideally, you'd have all the trusting servers in one subnet, all the work- stations in another, and the network switches in a third. Then the router would filter packets between the subnets, giving the workstations limited access to the servers, nothing access to the switches, and only the sysadmin's workstation access to the coffee pot. I've never seen a class-C sized network with such coherancy. IP Filter can help.
+
 To start with, we're going to separate the router, the workstations, and the servers. To do this we're going to need 2 hubs (or switches) which we probably already have, and an IPF machine with 3 ethernet cards. We're going to put all the servers on one hub and all the workstations on the other. Normally we'd then connect the hubs to each other, then to the router. Instead, we're going to plug the router into IPF's xl0 interface, the servers into IPF's xl1 interface, and the workstations into IPF's xl2 interface. Our network diagram looks something like this:
 
     | 20.20.20.2 unix server
@@ -1213,27 +1227,37 @@ With the combination of these two, the clients and servers can talk to each othe
 
 So remember, when your network is a mess of twisty IP addresses and machine classes, transparent filtered bridges can solve a problem that would otherwise be lived with and perhaps someday exploited.
 
-Drop-Safe Logging With dup-to and to.
 
+## Drop-Safe Logging With dup-to and to.
 
-Until now, we've been using the filter to drop packets. Instead of dropping them, lets consider passing them on to another system that can do something useful with this information beyond the logging we can perform with ipmon. Our firewall system, be it a bridge or a router, can have as many interfaces as we can cram into the system. We can use this information to create a "drop-safe" for our packets. A good example of a use for this would be to implement an intrusion detection network. For starters, it might be desirable to hide the presence of our intrusion detection systems from our real network so that we can keep them from being detected.
+Until now, we've been using the filter to drop packets. Instead of dropping them, lets consider passing them on to another system that can do something useful with this information beyond the logging we can perform with ipmon.
+
+Our firewall system, be it a bridge or a router, can have as many interfaces as we can cram into the system. We can use this information to create a "drop-safe" for our packets. A good example of a use for this would be to implement an intrusion detection network. For starters, it might be desirable to hide the presence of our intrusion detection systems from our real network so that we can keep them from being detected.  
+
 Before we get started, there are some operational characteristics that we need to make note of. If we are only going to deal with blocked packets, we can use either the to keyword or the fastroute keyword. (We'll cover the differences between these two later) If we're going to pass the packets like we normally would, we need to make a copy of the packet for our drop-safe log with the dup-to keyword.
 
-The dup-to Method
 
+## The dup-to Method
 
 If, for example, we wanted to send a copy of everything going out the xl3 interface off to our drop-safe network on ed0, we would use this rule in our filter list:
-pass out on xl3 dup-to ed0 from any to any
+
+    pass out on xl3 dup-to ed0 from any to any
+
 You might also have a need to send the packet directly to a specific IP address on your drop-safe network instead of just making a copy of the packet out there and hoping for the best. To do this, we modify our rule slightly:
-pass out on xl3 dup-to ed0:192.168.254.2 from any to any
+
+    pass out on xl3 dup-to ed0:192.168.254.2 from any to any
+
 But be warned that this method will alter the copied packet's destination address, and may thus destroy the usefulness of the log. For this reason, we reccomend only using the known address method of logging when you can be certain that the address that you're logging to corresponds in some way to what you're logging for (e.g.: don't use "192.168.254.2" for logging for both your web server and your mail server, since you'll have a hard time later trying to figure out which system was the target of a specific set of packets.)
+
 This technique can be used quite effectively if you treat an IP Address on your drop-safe network in much the same way that you would treat a Multicast Group on the real internet. (e.g.: "192.168.254.2" could be the channel for your http traffic analysis system, "23.23.23.23" could be your channel for telnet sessions, and so on.) You don't even need to actually have this address set as an address or alias on any of your analysis systems. Normally, your ipfilter machine would need to ARP for the new destination address (using dup-to ed0:192.168.254.2 style, of course) but we can avoid that issue by creating a static arp entry for this "channel" on our ipfilter system.
+
 In general, though, dup-to ed0 is all that is required to get a new copy of the packet over to our drop-safe network for logging and examination.
 
 
-# The to Method
+## The `to` Method
 
 The dup-to method does have an immediate drawback, though. Since it has to make a copy of the packet and optionally modify it for its new destination, it's going to take a while to complete all this work and be ready to deal with the next packet coming in to the ipfilter system.
+
 If we don't care about passing the packet to its normal destination and we were going to block it anyway, we can just use the to keyword to push this packet past the normal routing table and force it to go out a different interface than it would normally go out.
 
     block in quick on xl0 to ed0 proto tcp from any to any port < 1024
