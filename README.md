@@ -1130,14 +1130,23 @@ So far, we've been filtering by interface and protocol only. Even though bridgin
     pass in quick on xl0 proto tcp from any to 20.20.20.7/32 port=80 flags S keep state
     block in quick on xl0
 
-Now we have a network where 20.20.20.2 is a zone serving name server, 20.20.20.3 is an incoming mail server, and 20.20.20.7 is a web server.
+Now we have a network where `20.20.20.2` is a zone serving name server, `20.20.20.3` is an incoming mail server, and `20.20.20.7` is a web server.
 
-Bridged IP Filter is not yet perfect, we must confess. You'll note that all the rules are setup using the in direction instead of a combination of in and out. This is because the out direction seems presently broken with bridging in OpenBSD. Using IP Filter with bridging makes the use of IPF's NAT features inadvisable, if not downright dangerous. The first problem is that it would give away that there's a filtering bridge. The second problem would be that the bridge has no IP address to masquerade with, which will most assuredly lead to confusion and perhaps a kernel panic to boot.
+Bridged IP Filter is not yet perfect, we must confess.  
+You'll note that all the rules are setup using the in direction instead of a combination of in and out. This is because the out direction seems presently broken with bridging in OpenBSD. 
+
+Using IP Filter with bridging makes the use of IPF's NAT features inadvisable, if not downright dangerous.  
+The first problem is that it would give away that there's a filtering bridge.  
+The second problem would be that the bridge has no IP address to masquerade with, which will most assuredly lead to confusion and perhaps a kernel panic to boot.
 
 
 ## Using Transparent Filtering to Fix Network Design Mistakes
 
-Many organizations started using IP well before they thought a firewall or a subnet would be a good idea. Now they have class-C sized networks or larger that include all their servers, their workstations, their routers, coffee makers, everything. The horror! Renumbering with propper subnets, trust levels, filters, and so are in both time consuming and expensive. The expense in hardware and man hours alone is enough to make most organizations unwilling to really solve the problem, not to mention the downtime involved. The typical problem network looks like this:
+Many organizations started using IP well before they thought a firewall or a subnet would be a good idea. Now they have class-C sized networks or larger that include all their servers, their workstations, their routers, coffee makers, everything. The horror!
+
+Renumbering with propper subnets, trust levels, filters, and so are in both time consuming and expensive. The expense in hardware and man hours alone is enough to make most organizations unwilling to really solve the problem, not to mention the downtime involved. 
+
+The typical problem network looks like this:
 
     20.20.20.1 router 20.20.20.6 unix server
     20.20.20.2 unix server 20.20.20.7 nt workstation
@@ -1145,9 +1154,13 @@ Many organizations started using IP well before they thought a firewall or a sub
     20.20.20.4 win98 workstation 20.20.20.9 unix workstation
     20.20.20.5 intelligent switch 20.20.20.10 win95 workstation
 
-Only it's about 20 times larger and messier and frequently undocumented. Ideally, you'd have all the trusting servers in one subnet, all the work- stations in another, and the network switches in a third. Then the router would filter packets between the subnets, giving the workstations limited access to the servers, nothing access to the switches, and only the sysadmin's workstation access to the coffee pot. I've never seen a class-C sized network with such coherancy. IP Filter can help.
+Only it's about 20 times larger and messier and frequently undocumented. Ideally, you'd have all the trusting servers in one subnet, all the work- stations in another, and the network switches in a third. Then the router would filter packets between the subnets, giving the workstations limited access to the servers, nothing access to the switches, and only the sysadmin's workstation access to the coffee pot.  
+I've never seen a class-C sized network with such coherancy. IP Filter can help.
 
-To start with, we're going to separate the router, the workstations, and the servers. To do this we're going to need 2 hubs (or switches) which we probably already have, and an IPF machine with 3 ethernet cards. We're going to put all the servers on one hub and all the workstations on the other. Normally we'd then connect the hubs to each other, then to the router. Instead, we're going to plug the router into IPF's xl0 interface, the servers into IPF's xl1 interface, and the workstations into IPF's xl2 interface. Our network diagram looks something like this:
+To start with, we're going to separate the router, the workstations, and the servers. To do this we're going to need 2 hubs (or switches) which we probably already have, and an IPF machine with 3 ethernet cards. We're going to put all the servers on one hub and all the workstations on the other. Normally we'd then connect the hubs to each other, then to the router.  
+Instead, we're going to plug the router into IPF's xl0 interface, the servers into IPF's xl1 interface, and the workstations into IPF's xl2 interface.
+
+Our network diagram looks something like this:
 
     | 20.20.20.2 unix server
     router (20.20.20.1) ____________| 20.20.20.3 unix server
@@ -1175,7 +1188,11 @@ Where once there was nothing but interconnecting wires, now there's a filtering 
     pass in quick on xl2 proto icmp keep state
     block in quick on xl2 # nuh-uh, we're only passing tcp/udp/icmp sir.
 
-Once again, traffic coming from the router is restricted to DNS, SMTP, and HTTP. At the moment, the servers and the workstations can exchange traffic freely. Depending on what kind of organization you are, there might be something about this network dynamic you don't like. Perhaps you don't want your workstations getting access to your servers at all?
+Once again, traffic coming from the router is restricted to DNS, SMTP, and HTTP.
+
+At the moment, the servers and the workstations can exchange traffic freely. Depending on what kind of organization you are, there might be something about this network dynamic you don't like. 
+
+Perhaps you don't want your workstations getting access to your servers at all?
 
 Take the xl2 ruleset of:
 
@@ -1202,7 +1219,7 @@ Perhaps you want them to just get to the servers to get and send their mail with
     pass in quick on xl2 proto icmp keep state
     block in quick on xl2 # nuh-uh, we're only passing tcp/udp/icmp sir.
 
-Now your workstations and servers are protected from the outside world, and the servers are protected from your workstations.
+Now your workstations and servers are protected from the outside world, and the servers are protected from your workstations.  
 Perhaps the opposite is true, maybe you want your workstations to be able to get to the servers, but not the outside world. After all, the next generation of exploits is breaking the clients, not the servers. In this case, you'd change the xl2 rules to look more like this:
 
     pass in quick on xl2 from any to 20.20.20.0/24
@@ -1230,16 +1247,21 @@ So remember, when your network is a mess of twisty IP addresses and machine clas
 
 ## Drop-Safe Logging With dup-to and to.
 
-Until now, we've been using the filter to drop packets. Instead of dropping them, lets consider passing them on to another system that can do something useful with this information beyond the logging we can perform with ipmon.
+Until now, we've been using the filter to drop packets. Instead of dropping them, lets consider passing them on to another system that can do something useful with this information beyond the logging we can perform with `ipmon`.
 
-Our firewall system, be it a bridge or a router, can have as many interfaces as we can cram into the system. We can use this information to create a "drop-safe" for our packets. A good example of a use for this would be to implement an intrusion detection network. For starters, it might be desirable to hide the presence of our intrusion detection systems from our real network so that we can keep them from being detected.  
+Our firewall system, be it a bridge or a router, can have as many interfaces as we can cram into the system. We can use this information to create a "drop-safe" for our packets.  
+A good example of a use for this would be to implement an intrusion detection network. For starters, it might be desirable to hide the presence of our intrusion detection systems from our real network so that we can keep them from being detected.
 
-Before we get started, there are some operational characteristics that we need to make note of. If we are only going to deal with blocked packets, we can use either the to keyword or the fastroute keyword. (We'll cover the differences between these two later) If we're going to pass the packets like we normally would, we need to make a copy of the packet for our drop-safe log with the dup-to keyword.
+Before we get started, there are some operational characteristics that we need to make note of.  
+If we are only going to deal with blocked packets, we can use either the `to` keyword or the `fastroute` keyword.  
+<sub>(We'll cover the differences between these two later)</sub>
+
+If we're going to pass the packets like we normally would, we need to make a copy of the packet for our drop-safe log with the `dup-to` keyword.
 
 
 ## The dup-to Method
 
-If, for example, we wanted to send a copy of everything going out the xl3 interface off to our drop-safe network on ed0, we would use this rule in our filter list:
+If, for example, we wanted to send a copy of everything going out the `xl3` interface off to our drop-safe network on `ed0`, we would use this rule in our filter list:
 
     pass out on xl3 dup-to ed0 from any to any
 
@@ -1247,19 +1269,23 @@ You might also have a need to send the packet directly to a specific IP address 
 
     pass out on xl3 dup-to ed0:192.168.254.2 from any to any
 
-But be warned that this method will alter the copied packet's destination address, and may thus destroy the usefulness of the log. For this reason, we reccomend only using the known address method of logging when you can be certain that the address that you're logging to corresponds in some way to what you're logging for (e.g.: don't use "192.168.254.2" for logging for both your web server and your mail server, since you'll have a hard time later trying to figure out which system was the target of a specific set of packets.)
+But be warned that this method will alter the copied packet's destination address, and may thus destroy the usefulness of the log. For this reason, we recommend only using the known address method of logging when you can be certain that the address that you're logging to corresponds in some way to what you're logging for  
+<sub>(e.g. don't use `192.168.254.2` for logging for both your web server and your mail server, since you'll have a hard time later trying to figure out which system was the target of a specific set of packets.)</sub>
 
-This technique can be used quite effectively if you treat an IP Address on your drop-safe network in much the same way that you would treat a Multicast Group on the real internet. (e.g.: "192.168.254.2" could be the channel for your http traffic analysis system, "23.23.23.23" could be your channel for telnet sessions, and so on.) You don't even need to actually have this address set as an address or alias on any of your analysis systems. Normally, your ipfilter machine would need to ARP for the new destination address (using dup-to ed0:192.168.254.2 style, of course) but we can avoid that issue by creating a static arp entry for this "channel" on our ipfilter system.
+This technique can be used quite effectively if you treat an IP Address on your drop-safe network in much the same way that you would treat a Multicast Group on the real internet.  
+<sub>(e.g. `192.168.254.2` could be the channel for your http traffic analysis system, `23.23.23.23` could be your channel for telnet sessions, and so on.)</sub>
 
-In general, though, dup-to ed0 is all that is required to get a new copy of the packet over to our drop-safe network for logging and examination.
+You don't even need to actually have this address set as an address or alias on any of your analysis systems. Normally, your ipfilter machine would need to ARP for the new destination address (using `dup-to ed0:192.168.254.2` style, of course) but we can avoid that issue by creating a static arp entry for this "channel" on our ipfilter system.
+
+In general, though, `dup-to ed0` is all that is required to get a new copy of the packet over to our drop-safe network for logging and examination.
 
 
 ## The `to` Method
 
-The dup-to method does have an immediate drawback, though. Since it has to make a copy of the packet and optionally modify it for its new destination, it's going to take a while to complete all this work and be ready to deal with the next packet coming in to the ipfilter system.
+The `dup-to` method does have an immediate drawback, though. Since it has to make a copy of the packet and optionally modify it for its new destination, it's going to take a while to complete all this work and be ready to deal with the next packet coming in to the ipfilter system.
 
 If we don't care about passing the packet to its normal destination and we were going to block it anyway, we can just use the to keyword to push this packet past the normal routing table and force it to go out a different interface than it would normally go out.
 
     block in quick on xl0 to ed0 proto tcp from any to any port < 1024
 
-we use block quick for to interface routing, because like fastroute, the to interface code will generate two packet paths through ipfilter when used with pass, and likely cause your system to panic.
+we use `block quick` for `to` interface routing, because like fastroute, the `to` interface code will generate two packet paths through ipfilter when used with pass, and likely cause your system to panic.
